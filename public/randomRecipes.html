@@ -1,28 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Recipe</title>
-    <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Impact&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Random Recipe</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Random Recipe</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">Search Recipes</a></li>
-                <li><a href="randomRecipes.html">Random Recipe</a></li>
-                <li><a href="favorites.html">Favorites</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <div class="random-container">
-            <button class="btn-random" onclick="getRandomRecipe()">Get Random Recipe</button>
-            <div id="randomRecipe" class="random-recipe-container"></div>
-        </div>
-    </main>
-    <script src="random.js"></script>
+  <nav>
+    <div class="nav-container">
+      <img src="logo.jpg" alt="Flavor Table Logo">
+      <div class="logo-text">Flavor Table</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="randomRecipes.html">Random</a>
+        <a href="favorites.html">Favorites</a>
+      </div>
+    </div>
+  </nav>
+
+  <h1><span class="inline-bg">Random Recipe</span></h1>
+
+  <button id="randomBtn">Random Recipe</button>
+
+  <div id="randomRecipeContainer"></div>
+
+  <script>
+    document.getElementById("randomBtn").addEventListener("click", async () => {
+      const container = document.getElementById("randomRecipeContainer");
+      container.innerHTML = "";
+
+      try {
+        const response = await fetch("/recipes/random");
+        const data = await response.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = "<p>No recipes found.</p>";
+          return;
+        }
+
+        const recipe = data[0];
+
+        const card = document.createElement("div");
+        card.className = "recipe-card";
+
+        card.innerHTML = `
+          <h3>${recipe.title}</h3>
+          <img src="${recipe.image}" alt="${recipe.title}" width="200">
+          <p><strong>Instructions:</strong> ${recipe.instructions || "No instructions available."}</p>
+          <p><strong>Ingredients:</strong> ${recipe.ingredients.join(", ")}</p>
+          <button class="saveBtn"> Add to Favorites</button>
+          ${recipe.id ? `<a href="recipeDetails.html?id=${recipe.id}" class="details-link">🔎 View Recipe</a>` : ""}
+        `;
+
+        card.querySelector(".saveBtn").addEventListener("click", () => {
+          addToFavorites(recipe);
+        });
+
+        container.appendChild(card);
+      } catch (error) {
+        container.innerHTML = "<p> Failed to fetch recipe. Please try again.</p>";
+        console.error("Error:", error);
+      }
+    });
+
+    function addToFavorites(recipe) {
+      const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+      const recipeToSave = {
+        id: recipe.id || null,
+        title: recipe.title || "No Title",
+        image: recipe.image || "",
+        usedIngredients: recipe.usedIngredients || [],
+        missedIngredients: recipe.missedIngredients || [],
+      };
+
+      const alreadyExists = favorites.some(fav => fav.title === recipeToSave.title);
+
+      if (!alreadyExists) {
+        favorites.push(recipeToSave);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        alert(" Recipe added to favorites!");
+      } else {
+        alert("ℹ Already in favorites.");
+      }
+    }
+  </script>
 </body>
+<footer>
+  <p>Flavor Table &copy; 2025 by Linda Hashash</p>
+</footer>
 </html>
