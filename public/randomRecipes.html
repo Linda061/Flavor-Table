@@ -3,7 +3,7 @@
 <head>
   <link href="https://fonts.googleapis.com/css2?family=Impact&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
-  <title>Random Recipe</title>
+  <title>Random Recipes</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -50,7 +50,7 @@
           <p><strong>Instructions:</strong> ${recipe.instructions || "No instructions available."}</p>
           <p><strong>Ingredients:</strong> ${recipe.ingredients.join(", ")}</p>
           <button class="saveBtn"> Add to Favorites</button>
-          ${recipe.id ? `<a href="recipeDetails.html?id=${recipe.id}" class="details-link">🔎 View Recipe</a>` : ""}
+          ${recipe.id ? `<a href="recipeDetails.html?id=${recipe.id}" class="details-link"> View Recipe</a>` : ""}
         `;
 
         card.querySelector(".saveBtn").addEventListener("click", () => {
@@ -65,25 +65,26 @@
     });
 
     function addToFavorites(recipe) {
-      const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-
-      const recipeToSave = {
-        id: recipe.id || null,
-        title: recipe.title || "No Title",
-        image: recipe.image || "",
-        usedIngredients: recipe.usedIngredients || [],
-        missedIngredients: recipe.missedIngredients || [],
-      };
-
-      const alreadyExists = favorites.some(fav => fav.title === recipeToSave.title);
-
-      if (!alreadyExists) {
-        favorites.push(recipeToSave);
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-        alert(" Recipe added to favorites!");
-      } else {
-        alert("ℹ Already in favorites.");
-      }
+      fetch('/recipes/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: recipe.id,
+          title: recipe.title,
+          image: recipe.image,
+          instructions: recipe.instructions,
+          ingredients: recipe.ingredients,
+          ready_in_minutes: recipe.readyInMinutes,
+          summary: recipe.summary
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert('Recipe added to favorites');
+      })
+      .catch(error => console.error('Error adding recipe:', error));
     }
   </script>
 </body>

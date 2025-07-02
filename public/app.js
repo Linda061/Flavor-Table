@@ -78,25 +78,21 @@ searchButton.addEventListener("click", async () => {
 });
 
 function addToFavorites(dish) {
-  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-
-  const dishToSave = {
-    id: dish.id || null,
-    title: dish.title || "No Title",
-    image: dish.image || "",
-    usedIngredients: dish.usedIngredients || [],
-    missedIngredients: dish.missedIngredients || [],
-  };
-
-  const isAlreadyFavorite = favorites.some(fav => fav.title === dishToSave.title);
-
-  if (!isAlreadyFavorite) {
-    favorites.push(dishToSave);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+  fetch('/recipes/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      recipe_id: dish.id || null,
+      user_id: 1, // ضع رقم معرف المستخدم هنا
+    }),
+  })
+  .then(response => response.json())
+  .then(data => {
     alert("Recipe added to favorites");
-  } else {
-    alert("This recipe is already added to your favorites");
-  }
+  })
+  .catch(error => console.error("Error adding recipe:", error));
 }
 
 document.addEventListener("DOMContentLoaded", fetchRandomDishes);
