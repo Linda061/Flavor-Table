@@ -3,7 +3,7 @@
 <head>
   <link href="https://fonts.googleapis.com/css2?family=Impact&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
-  <title>Flavor Table</title>
+  <title>Favorite Recipes</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -27,38 +27,43 @@
 
     function loadFavorites() {
       favoritesContainer.innerHTML = "";
-      const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+      fetch('/recipes/all')
+        .then(response => response.json())
+        .then(favorites => {
+          if (favorites.length === 0) {
+            favoritesContainer.innerHTML = "<p>No favorite recipes yet</p>";
+            return;
+          }
 
-      if (favorites.length === 0) {
-        favoritesContainer.innerHTML = "<p>No favorite recipes yet</p>";
-        return;
-      }
+          favorites.forEach((recipe, index) => {
+            const card = document.createElement("div");
+            card.className = "dish-card";
 
-      favorites.forEach((recipe, index) => {
-        const card = document.createElement("div");
-        card.className = "dish-card";
+            card.innerHTML = `
+              <h3>${recipe.title}</h3>
+              <img src="${recipe.image}" alt="${recipe.title}" width="200">
+              <p><strong>Used Ingredients:</strong> ${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : "-"}</p>
+              <p><strong>Missed Ingredients:</strong> ${Array.isArray(recipe.missedIngredients) ? recipe.missedIngredients.join(", ") : "-"}</p>
+              <button class="removeBtn">Remove</button>
+            `;
 
-        card.innerHTML = `
-          <h3>${recipe.title}</h3>
-          <img src="${recipe.image}" alt="${recipe.title}" width="200">
-          <p><strong>Used Ingredients:</strong> ${Array.isArray(recipe.usedIngredients) ? recipe.usedIngredients.join(", ") : "-"}</p>
-          <p><strong>Missed Ingredients:</strong> ${Array.isArray(recipe.missedIngredients) ? recipe.missedIngredients.join(", ") : "-"}</p>
-          <button class="removeBtn">Remove</button>
-        `;
+            card.querySelector(".removeBtn").addEventListener("click", () => {
+              removeFavorite(recipe.id);
+            });
 
-        card.querySelector(".removeBtn").addEventListener("click", () => {
-          removeFavorite(index);
-        });
-
-        favoritesContainer.appendChild(card);
-      });
+            favoritesContainer.appendChild(card);
+          });
+        })
+        .catch(error => console.error("Error loading favorites:", error));
     }
 
-    function removeFavorite(index) {
-      const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-      favorites.splice(index, 1);
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-      loadFavorites();
+    function removeFavorite(id) {
+      fetch(`/recipes/${id}`, {
+        method: 'DELETE',
+      })
+      .then(response => response.json())
+      .then(() => loadFavorites())
+      .catch(error => console.error('Error removing favorite:', error));
     }
 
     window.onload = loadFavorites;
